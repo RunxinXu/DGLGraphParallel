@@ -108,14 +108,13 @@ class DGLGraphDataParallel(torch.nn.Module):
 
     if not isinstance(inputs, list):
       inputs = [inputs]
-    # kwargs won't be automatically copied into corresponding gpus
-    assert len(self.device_ids) >= len(inputs)
+    if len(self.device_ids) < len(inputs):
+      raise RuntimeError("device num [{}] is not equal to inputs length [{}]"
+                         .format(len(self.device_ids), len(inputs)))
+    # replicate kwargs
     kwargs = scatter(kwargs, self.device_ids[:len(inputs)], 0)
     if len(self.device_ids) == 1:
       return self.module(inputs[0])
-    elif len(inputs) > len(self.device_ids):
-      raise RuntimeError("device num [{}] is not equal to inputs length [{}]"
-                         .format(len(self.device_ids), len(inputs)))
     elif isinstance(inputs[0], NodeFlow):
       # copy inputs from its parent graph (should reside in cuda:0)
       # better way for small graphs to do this is to replica parent features 

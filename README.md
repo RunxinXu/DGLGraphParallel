@@ -4,7 +4,7 @@ PyTorch data parallelism solution for training DGL(Deep Graph Library) models on
 
 ### Getting Started
 
-Since DGL doesn't provide simple APIs for training DGL by Single-Machine-Multi-GPUs, this module provides an unofficial way to support training GCN-like modules on multi-GPUs with PyTorch backend.
+Since DGL doesn't provide simple APIs for training DGL in parallel, this module provides an unofficial way to train GCN-like modules on multi-GPUs with PyTorch backend.
 
 ### Prerequisites
 
@@ -19,7 +19,7 @@ class DGLNodeFlowLoader
 ```
 This class generates multi-nodeflows according to the cuda device number. The genereated nodeflows will be gathered into a list as the input data.
 
-Currently it only supports `NeighborSampler`
+Currently it only supports `NeighborSampler` method.
 
 ```python
 class DGLGraphDataParallel(torch.nn.Module)
@@ -28,9 +28,9 @@ Similar to `torch.nn.DataParallel`, this class automatically replicates the mode
 
 ### Run
 
-See the examples of `gcn_ns_dp.py` in folder examples.
+See the examples of `gcn_ns_dp.py` in folder `examples`.
 
-To run the example, instruction can be like as:
+To run the example, instruction can be:
 
 ```sh
 $ cp DGLGraphParallel/examples/gcn_ns_dp.py ./
@@ -42,18 +42,18 @@ $ DGLBACKEND=pytorch python gcn_ns_dp.py --gpu 0,1,2 --dataset reddit-self-loop 
 ```python
 class DGLNodeFlowLoader
 ```
-It will generate same number nodeflows as the `torch.cuda.device_count()` and gather them into a list for inputs. Also the `labels` will be returned as the concatenation of all nodeflows corresponded labels in the inputs.
+It will generate same number of nodeflows as the `torch.cuda.device_count()` and gather them into a list for inputs. Also the `labels` will be returned as the concatenation of all labels corresponded to nodeflows in the inputs.
 
 ```python
 class DGLGraphDataParallel
 ```
 This class is modified from `torch.nn.DataParallel`. The input of the model should be a list of nodeflows. 
 
-Each `forward` will do things like below (similar with `torch.nn.DataParallel`):
+Each `forward` will perform following operations (similar to `torch.nn.DataParallel`):
 
   * Scatter `inputs` and `kwargs` to all GPUs (by using `NodeFlow.copy_from_parent()`)
 
-  * Replicates the module to all GPUs (same as `torch`)
+  * Replicate the module to all GPUs (same as `torch`)
 
   * Parallel apply for all GPUs (same as `torch`)
 

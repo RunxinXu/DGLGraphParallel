@@ -10,6 +10,16 @@ from dgl import NodeFlow
 from dgl.contrib.sampling import NeighborSampler
 
 class DGLNodeFlowLoader():
+  """
+  Generate inputs data and labels at each iteration.
+  inputs: will be a list of dgl.NodeFlows
+          whose length is equal to `torch.cuda.device_count()`.
+  labels: will be a tensor which concats all labels 
+          corresponded to nodeflows in the inputs
+  Note:
+    Current implementation only supports 
+      `dgl.contrib.sampling.NeighborSampler`
+  """
   def __init__(self, graph, labels, batch_size,
                num_hops, seed_nodes, sample_type='neighbor',
                num_neighbors=8, num_worker=32):
@@ -65,7 +75,12 @@ class DGLNodeFlowLoader():
 
 
 class DGLGraphDataParallel(torch.nn.Module):
-
+  """
+  Similar to `torch.nn.DataParallel`
+  Each element (instance of dgl.NodeFlow) will call 
+    `dgl.NodeFlow.copy_from_parent(ctx)`
+  to get load needed features into corresponding GPUs
+  """
   def __init__(self, module, device_ids=None, output_device=None, dim=0):
     super(DGLGraphDataParallel, self).__init__()
 
@@ -93,8 +108,8 @@ class DGLGraphDataParallel(torch.nn.Module):
 
   def forward(self, inputs, **kwargs):
     """
-    inputs should be a list when multi-gpus is enabled.
-    The list length of inputs should be equal to device num.
+    inputs should be a list of dgl.NodeFlows when multi-gpus is enabled.
+    The length of inputs should be equal (or less) to device num.
     Each element in inputs list should be a instance of nodeflow
     """
     if not self.device_ids:

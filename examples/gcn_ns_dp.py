@@ -134,12 +134,9 @@ def main(args):
               n_train_samples,
               n_val_samples,
               n_test_samples))
-
-    # prepare graph data
     g = DGLGraph(data.graph, readonly=True)
     norm = 1. / g.in_degrees().float().unsqueeze(1)
-    g.ndata['features'] = features
-    g.ndata['norm'] = norm
+
     # prepare model
     model = GCNSampling(in_feats,
                         args.n_hidden,
@@ -164,16 +161,19 @@ def main(args):
       cuda = True
       os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
       device = torch.device("cuda:0")
-      model = model.to(device)
+      model.to(device)
       model = DGLGraphDataParallel(model)
-      infer_model = infer_model.to(device)
+      infer_model.to(device)
       features = features.to(device)
       labels = labels.to(device)
       train_mask = train_mask.to(device)
       val_mask = val_mask.to(device)
       test_mask = test_mask.to(device)
       norm = norm.to(device)
-    # get train loader
+    
+    # prepare data
+    g.ndata['features'] = features
+    g.ndata['norm'] = norm
     train_loader = DGLNodeFlowLoader(g, labels, 
                                      args.batch_size,
                                      args.n_layers+1,
@@ -208,7 +208,7 @@ def main(args):
       print('Epoch [{}]: Average Batch Time(s): {:.4f}, Epoch Time: {:.4f}'.format(epoch, np.mean(batch_dur), epoch_dur[-1]))
       print('Average Epoch Time(s): {:.4f}'.format(np.mean(epoch_dur[3:])))
 
-    # test
+    # validation -- on single GPU
     for infer_param, param in zip(infer_model.parameters(), model.module.parameters()):    
       infer_param.data.copy_(param.data)
     num_acc = 0.
@@ -225,18 +225,6 @@ def main(args):
         batch_nids = nf.layer_parent_nid(-1).to(device=pred.device, dtype=torch.long)
         batch_labels = labels[batch_nids]
         num_acc += (pred.argmax(dim=1) == batch_labels).sum().cpu().item()
-    
-    #test_loader = DGLNodeFlowLoader(g, labels, 
-    #                                 args.test_batch_size,
-    #                                 args.n_layers+1,
-    #                                 test_nid,
-    #                                 sample_type='neighbor',
-    #                                 num_neighbors=g.number_of_nodes(),
-    #                                 num_worker=32)
-    #infer_model.eval()
-    #for inputs, label in test_loader:
-    #  pred = model(inputs)
-    #  num_acc += (pred.argmax(dim=1) == label).sum().cpu().item()
 
     print("Test Accuracy {:.4f}".format(num_acc / n_test_samples))
 

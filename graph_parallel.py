@@ -79,7 +79,7 @@ class DGLGraphDataParallel(torch.nn.Module):
   Similar to `torch.nn.DataParallel`
   Each element (instance of dgl.NodeFlow) will call 
     `dgl.NodeFlow.copy_from_parent(ctx)`
-  to get load needed features into corresponding GPUs
+  to load needed features into corresponding GPUs
   """
   def __init__(self, module, device_ids=None, output_device=None, dim=0):
     super(DGLGraphDataParallel, self).__init__()
@@ -110,7 +110,7 @@ class DGLGraphDataParallel(torch.nn.Module):
     """
     inputs should be a list of dgl.NodeFlows when multi-gpus is enabled.
     The length of inputs should be equal (or less) to device num.
-    Each element in inputs list should be a instance of nodeflow
+    Each element in inputs should be an instance of nodeflow
     """
     if not self.device_ids:
       return self.module(*inputs, **kwargs)

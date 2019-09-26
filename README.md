@@ -60,3 +60,31 @@ Each `forward` will perform following operations (similar to `torch.nn.DataParal
   * Gather forwarding results back to one GPU (same as `torch`)
 
 So `DGLGraphDataParallel` will transmit datas (nodeflows), weights, forwarding results at every single forwarding. The backward (gradient generation and weights update) will be only applied on one GPU.
+
+### Measurements
+
+All the following results are measured on three GTX 1080 GPUs using `examples/gcn_ns_dp.py` with 2 GCN Layers and 10 sampling neighbors. The batch size is 30000.
+
+* Strong Scalability Test (each model replica's batch size = 30000)
+  
+  +------+---------------+
+  | GPUs | Epoch Time(s) |
+  +------+---------------+
+  | 1    | 3.6018        |
+  +------+---------------+
+  | 2    | 4.8981        |
+  +------+---------------+
+  | 3    | 4.1862        |
+  +------+---------------+
+
+* Weak Scalability Test (each model replica's batch size = 30000 / GPUs)
+  
+  +------+---------------+
+  | GPUs | Epoch Time(s) |
+  +------+---------------+
+  | 1    | 3.6018        |
+  +------+---------------+
+  | 2    | 3.9829        |
+  +------+---------------+
+  | 3    | 4.5653        |
+  +------+---------------+

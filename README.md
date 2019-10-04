@@ -74,7 +74,6 @@ Each `forward` will perform following operations (similar to `torch.nn.DataParal
 Therefore, `DGLGraphDataParallel` will transmit datas (nodeflows), weights, forwarding results at every single forwarding. The backward (gradient generation and weights update) will be only applied on one GPU.
 
 Also we can leverage PyTorch NCCL backend (which only transfers gradient under ring-allreduced pattern) and DGL Graph Store (stores the graph data in shared memory) to implement single machine multi gpus training. A demo can be found in `examples/distributed/`.
-So `DGLGraphDataParallel` will transmit datas (nodeflows), weights, forwarding results at every single forwarding. The backward (gradient generation and weights update) will be only applied on one GPU.
 
 ### Measurements
 

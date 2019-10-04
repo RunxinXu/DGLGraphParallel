@@ -30,11 +30,23 @@ Similar to `torch.nn.DataParallel`, this class automatically replicates the mode
 
 See the examples of `gcn_ns_dp.py` in folder `examples`.
 
-To run the example, instruction can be:
+To run the example with `nn.DataParallel` API, instruction can be:
 
 ```sh
 $ cp DGLGraphParallel/examples/gcn_ns_dp.py ./
 $ DGLBACKEND=pytorch python gcn_ns_dp.py --gpu 0,1,2 --dataset reddit-self-loop --num-neighbors 10 --batch-size 30000 --test-batch-size 30000
+```
+
+To run the example with `nn.DistributedDataParallel` API, instruction can be:
+
+```sh
+(in bash 1)
+$ python examples/distributed/run_graph_server.py --dataset reddit-self-loop --num-workers 3
+```
+
+```sh
+(in bash 2, after bash 1 starts graph server)
+$ DGLBACKEND=pytorch python examples/distributed/gcn_ns_ddp.py --gpu 0,1,2 --dataset reddit-self-loop --num-neighbors 10 --batch-size 10000 --test-batch-size 10000
 ```
 
 ### Implementation Details
@@ -59,4 +71,6 @@ Each `forward` will perform following operations (similar to `torch.nn.DataParal
 
   * Gather forwarding results back to one GPU (same as `torch`)
 
-So `DGLGraphDataParallel` will transmit datas (nodeflows), weights, forwarding results at every single forwarding. The backward (gradient generation and weights update) will be only applied on one GPU.
+Therefore, `DGLGraphDataParallel` will transmit datas (nodeflows), weights, forwarding results at every single forwarding. The backward (gradient generation and weights update) will be only applied on one GPU.
+
+Also we can leverage PyTorch NCCL backend (which only transfers gradient under ring-allreduced pattern) and DGL Graph Store (stores the graph data in shared memory) to implement single machine multi gpus training. A demo can be found in `examples/distributed/`.

@@ -57,8 +57,10 @@ def trainer(rank, world_size, args, backend='nccl'):
 
   # start training
   epoch_dur = []
+  batch_dur = []
   for epoch in range(args.n_epochs):
     model.train()
+    epoch_start_time = time.time()
     step = 0
     for nf in dgl.contrib.sampling.NeighborSampler(g, args.batch_size,
                                                   args.num_neighbors,
@@ -68,6 +70,7 @@ def trainer(rank, world_size, args, backend='nccl'):
                                                   num_hops=args.n_layers+1,
                                                   seed_nodes=train_nid,
                                                   prefetch=True):
+      batch_start_time = time.time()
       nf.copy_from_parent(ctx=ctx)
       batch_nids = nf.layer_parent_nid(-1)
       label = g.nodes[batch_nids].data['labels']
@@ -80,8 +83,13 @@ def trainer(rank, world_size, args, backend='nccl'):
       optimizer.step()
 
       step += 1
+      batch_dur.append(time.time() - batch_start_time)
       if rank == 0 and step % 1 == 0:
-        print('epoch [{}] step [{}]'.format(epoch + 1, step))
+        print('epoch [{}] step [{}]. Batch average time(s): {:.4f}'
+              .format(epoch + 1, step, np.mean(np.array(batch_dur))))
+    if rank == 0:
+      epoch_dur.append(time.time() - epoch_start_time)
+      print('Epoch average time: {:.4f}'.format(np.mean(np.array(epoch_dur[2:]))))
   
   if rank == 0:
     infer_model = GCNInfer(in_feats,
@@ -138,8 +146,7 @@ if __name__ == '__main__':
   args = parser.parse_args()
 
   os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
-  #gpu_num = torch.cuda.device_count()
-  gpu_num = 3
+  gpu_num = len(args.gpu.split(','))
 
   processes = []
   for rank in range(gpu_num):

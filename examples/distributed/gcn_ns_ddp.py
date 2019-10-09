@@ -148,11 +148,5 @@ if __name__ == '__main__':
   os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
   gpu_num = len(args.gpu.split(','))
 
-  processes = []
-  for rank in range(gpu_num):
-    p = mp.Process(target=trainer, args=(rank, gpu_num, args))
-    p.start()
-    processes.append(p)
-  for p in processes:
-    p.join()
+  mp.spawn(trainer, args=(gpu_num, args), nprocs=gpu_num, join=True)
   

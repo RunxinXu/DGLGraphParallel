@@ -129,6 +129,7 @@ class DGLGraphDataParallel(torch.nn.Module):
     # replicate kwargs
     kwargs = scatter(kwargs, self.device_ids[:len(inputs)], 0)
     if len(self.device_ids) == 1:
+      inputs[0].copy_from_parent()
       return self.module(inputs[0])
     elif isinstance(inputs[0], NodeFlow):
       # copy inputs from its parent graph (should reside in cuda:0)

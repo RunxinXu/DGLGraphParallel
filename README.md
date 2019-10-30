@@ -46,7 +46,7 @@ $ python examples/distributed/run_graph_server.py --dataset reddit-self-loop --n
 
 ```sh
 (in bash 2, after bash 1 starts graph server)
-$ DGLBACKEND=pytorch python examples/distributed/gcn_ns_ddp.py --gpu 0,1,2 --dataset reddit-self-loop --num-neighbors 10 --batch-size 10000 --test-batch-size 10000
+$ DGLBACKEND=pytorch python examples/distributed/gcn_ns_ddp.py --gpu 0,1 --dataset reddit-self-loop --num-neighbors 10 --batch-size 30000 --test-batch-size 10000
 ```
 
 ### Implementation Details

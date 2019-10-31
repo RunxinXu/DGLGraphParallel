@@ -82,9 +82,9 @@ class DGLNodeFlowLoader():
         device = torch.device(i)
         nf = next(self.sampler_iter)
         nf._parent = self.graphs[i]
-        batch_nids = nf.layer_parent_nid(-1).to(device=device, dtype=torch.long)
+        batch_nids = nf.layer_parent_nid(-1).to(device=torch.device(0), dtype=torch.long)
         nf_list.append(nf)
-        label_list.append(self.labels[i][batch_nids])
+        label_list.append(self.labels[0][batch_nids])
       except StopIteration:
         if len(nf_list) == 0:
           raise StopIteration

@@ -135,7 +135,6 @@ def main(args):
               n_val_samples,
               n_test_samples))
     g = DGLGraph(data.graph, readonly=True)
-    #norm = 1. / g.in_degrees().float().unsqueeze(1)
 
     # prepare model
     model = GCNSampling(in_feats,
@@ -156,21 +155,11 @@ def main(args):
 
     # data parallel
     if args.gpu != 'cpu':
-      os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
       device = torch.device("cuda:0")
       model.to(device)
       model = DGLGraphDataParallel(model)
       infer_model.to(device)
-      #features = features.to(device)
-      #labels = labels.to(device)
-      #train_mask = train_mask.to(device)
-      #val_mask = val_mask.to(device)
-      #test_mask = test_mask.to(device)
-      #norm = norm.to(device)
     
-    # prepare data
-    #g.ndata['features'] = features
-    #g.ndata['norm'] = norm
     train_loader = DGLNodeFlowLoader(data, 
                                      args.batch_size,
                                      args.n_layers+1,
@@ -254,7 +243,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     print(args)
-
+    os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
     main(args)
 
 

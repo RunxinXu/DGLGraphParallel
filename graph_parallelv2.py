@@ -170,8 +170,3 @@ class DGLGraphDataParallel(torch.nn.Module):
   def gather(self, outputs, output_device):
     return gather(outputs, output_device, dim=self.dim)
 
-
-class DataCopyContext:
-  def __init__(self, device_type="cpu", index=None):
-    self.type= device_type
-    self.index = index

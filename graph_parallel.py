@@ -136,8 +136,7 @@ class DGLGraphDataParallel(torch.nn.Module):
       # better way for small graphs to do this is to replica parent features 
       # to all gpus and load from its own gpu
       for device_id in range(len(inputs)):
-        dgl_ctx = DataCopyContext(device_type="cuda", index=self.device_ids[device_id])
-        inputs[device_id].copy_from_parent(ctx=dgl_ctx)
+        inputs[device_id].copy_from_parent(ctx=torch.device(device_id))
     replicas = self.replicate(self.module, self.device_ids[:len(inputs)])
     outputs = self.parallel_apply(replicas, inputs, kwargs)
     return self.gather(outputs, self.output_device)
@@ -150,9 +149,3 @@ class DGLGraphDataParallel(torch.nn.Module):
   
   def gather(self, outputs, output_device):
     return gather(outputs, output_device, dim=self.dim)
-
-
-class DataCopyContext:
-  def __init__(self, device_type="cpu", index=None):
-    self.type= device_type
-    self.index = index
